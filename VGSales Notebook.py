@@ -81,7 +81,7 @@ games = games.withColumn("JP_Sales", col("JP_Sales").cast(DoubleType()))
 
 # COMMAND ----------
 
-# DBTITLE 1,Cast Japan Sales to double
+# DBTITLE 1,Cast Other Sales to double
 games = games.withColumn("Other_Sales", col("Other_Sales").cast(DoubleType()))
 
 # COMMAND ----------
@@ -103,3 +103,177 @@ gamesNameChange = games.withColumnRenamed("JP_Sales", "Japan_Sales")
 
 # DBTITLE 1,Showing new column name change
 gamesNameChange.show()
+
+# COMMAND ----------
+
+# DBTITLE 1,Creates transformed-data vgsales folder 
+gamesNameChange.write.option("header", "true").csv("mnt/games/transformed-data/vgsales")
+
+# COMMAND ----------
+
+# DBTITLE 1,Overwrites transformed data to transformed-data folder 
+gamesNameChange.write.mode("overwrite").option("header", "true").csv("/mnt/games/transformed-data/vgsales")
+
+# COMMAND ----------
+
+# DBTITLE 1,Importing Plotly Express for data visualisation 
+import plotly.express as ps
+
+# COMMAND ----------
+
+# DBTITLE 1,Visualisation of Genre Popularity
+# Read the CSV file as a Spark DataFrame
+vgsales = spark.read.format("csv") \
+    .option("header", "true") \
+    .option("inferSchema", "true") \
+    .load("/mnt/games/raw-data/vgsales.csv") \
+    .createOrReplaceTempView("temp_table")
+
+# Create a Spark table from the temporary view
+spark.sql("CREATE TABLE IF NOT EXISTS games USING parquet AS SELECT * FROM temp_table")
+
+# Query for Genre Popularity based on sales
+query_result = spark.sql("SELECT Genre, Global_Sales FROM games")
+
+# Create a Pandas DataFrame for plotting
+pandas_df = query_result.toPandas()
+
+# Group by Genre and Global sales, and create a DataFrame with "genre" and "global sales" columns
+grouped_df = pandas_df.groupby("Genre").size().to_frame(name="sales").reset_index()
+
+# Create the bar chart using Plotly (with color customisation)
+fig = ps.bar(grouped_df, x="Genre", y="sales", color="sales", color_continuous_scale="Viridis")
+
+# Set plot size
+fig.update_layout(width=900, height=600)
+
+# Display the plot
+fig.show()
+
+
+# COMMAND ----------
+
+# DBTITLE 1,Visualisation of platform sales
+# Read the CSV file as a Spark DataFrame
+vgsales = spark.read.format("csv") \
+    .option("header", "true") \
+    .option("inferSchema", "true") \
+    .load("/mnt/games/raw-data/vgsales.csv") \
+    .createOrReplaceTempView("temp_table")
+
+# Create a Spark table from the temporary view
+spark.sql("CREATE TABLE IF NOT EXISTS games USING parquet AS SELECT * FROM temp_table")
+
+# Query for Platform Popularity based on sales
+query_result = spark.sql("SELECT Platform, Global_Sales FROM games")
+
+# Create a Pandas DataFrame for plotting
+pandas_df = query_result.toPandas()
+
+# Group by Platform and Global sales, and create a DataFrame with "Platform" and "Global Sales" columns
+grouped_df = pandas_df.groupby("Platform").size().to_frame(name="Sales").reset_index()
+
+# Create the bar chart using Plotly (with color customisation)
+fig = ps.bar(grouped_df, x="Platform", y="Sales", color="Sales", color_continuous_scale="Viridis")
+
+# Set plot size
+fig.update_layout(width=900, height=600)
+
+# Display the plot
+fig.show()
+
+# COMMAND ----------
+
+# DBTITLE 1,Rank based on titles and global sales
+# Read the CSV file as a Spark DataFrame
+vgsales = spark.read.format("csv") \
+    .option("header", "true") \
+    .option("inferSchema", "true") \
+    .load("/mnt/games/raw-data/vgsales.csv") \
+    .createOrReplaceTempView("temp_table")
+
+    
+# Create a Spark table from the temporary view
+spark.sql("CREATE TABLE IF NOT EXISTS games USING parquet AS SELECT * FROM temp_table")
+
+# Query for Platform Popularity based on sales
+query_result = spark.sql("SELECT Rank, Global_Sales, Name FROM games")
+
+# Create a Pandas DataFrame for plotting
+pandas_df = query_result.toPandas()
+
+# Group by Rank and Name, and create a DataFrame with "Rank" and "Name" columns
+grouped_df = pandas_df.groupby("Name").size().to_frame(name="Rank").reset_index().head(15)
+
+# Create the bar chart using Plotly (with color customisation)
+fig = ps.bar(grouped_df, x="Name", y="Rank", color="Name", color_continuous_scale="Viridis")
+
+# Set plot size
+fig.update_layout(width=900, height=600)
+
+# Display the plot
+fig.show()
+
+# COMMAND ----------
+
+# DBTITLE 1,Publishers that have sold the most games 
+# Read the CSV file as a Spark DataFrame
+vgsales = spark.read.format("csv") \
+    .option("header", "true") \
+    .option("inferSchema", "true") \
+    .load("/mnt/games/raw-data/vgsales.csv") \
+    .createOrReplaceTempView("temp_table")
+
+    
+# Create a Spark table from the temporary view
+spark.sql("CREATE TABLE IF NOT EXISTS games USING parquet AS SELECT * FROM temp_table")
+
+# Query for Platform Popularity based on sales
+query_result = spark.sql("SELECT Publisher, Global_Sales FROM games")
+
+# Create a Pandas DataFrame for plotting
+pandas_df = query_result.toPandas()
+
+# Group by Publisher and global sales, and create a DataFrame with "Publisher" and "Global Sales" columns limited to 10
+grouped_df = pandas_df.groupby("Publisher").size().to_frame(name="Sales").reset_index().head(15)
+
+# Create the bar chart using Plotly (with color customisation)
+fig = ps.bar(grouped_df, x="Publisher", y="Sales", color="Sales", color_continuous_scale="Viridis")
+
+# Set plot size
+fig.update_layout(width=900, height=600)
+
+# Display the plot
+fig.show()
+
+# COMMAND ----------
+
+# DBTITLE 1,Global Sales based on year
+# Read the CSV file as a Spark DataFrame
+vgsales = spark.read.format("csv") \
+    .option("header", "true") \
+    .option("inferSchema", "true") \
+    .load("/mnt/games/raw-data/vgsales.csv") \
+    .createOrReplaceTempView("temp_table")
+
+    
+# Create a Spark table from the temporary view
+spark.sql("CREATE TABLE IF NOT EXISTS games USING parquet AS SELECT * FROM temp_table")
+
+# Query for Platform Popularity based on sales
+query_result = spark.sql("SELECT Year, Global_Sales FROM games")
+
+# Create a Pandas DataFrame for plotting
+pandas_df = query_result.toPandas()
+
+# Group by Year and Global Sales, and create a DataFrame with "Year" and "Global Sales" columns limited to 10
+grouped_df = pandas_df.groupby("Year").size().to_frame(name="Sales").reset_index()
+
+# Create the bar chart using Plotly (with color customisation)
+fig = ps.bar(grouped_df, x="Year", y="Sales", color="Sales", color_continuous_scale="Viridis")
+
+# Set plot size
+fig.update_layout(width=900, height=600)
+
+# Display the plot
+fig.show()
