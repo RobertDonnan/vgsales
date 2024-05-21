@@ -202,8 +202,8 @@ query_result = spark.sql("SELECT Rank, Global_Sales, Name FROM games")
 # Create a Pandas DataFrame for plotting
 pandas_df = query_result.toPandas()
 
-# Group by Rank and Name, and create a DataFrame with "Rank" and "Name" columns
-grouped_df = pandas_df.groupby("Name").size().to_frame(name="Rank").reset_index().head(15)
+# Group by Rank and Name, and create a DataFrame with "Rank" and "Name" columns and finding the mean to calculate the rank of each game
+grouped_df = pandas_df.groupby("Name")["Rank"].mean().reset_index().head(20)
 
 # Create the bar chart using Plotly (with color customisation)
 fig = ps.bar(grouped_df, x="Name", y="Rank", color="Name", color_continuous_scale="Viridis")
